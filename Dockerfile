@@ -13,18 +13,21 @@ RUN apt-get update \
                 libpcre3-dev \
                 zlib1g-dev \
                 libldap2-dev \
-                libssl-dev
+		wget \
+                libssl-dev \
+		--fix-missing
 
 # See http://wiki.nginx.org/InstallOptions
 RUN cd ~ \
         && git clone https://github.com/kvspb/nginx-auth-ldap.git \
+	&& pwd \
         && wget http://nginx.org/download/nginx-1.7.7.tar.gz \
 	&& tar -xvzf nginx-1.7.7.tar.gz \
 	&& cd nginx-1.7.7 \
         && chmod +x configure \
         && ./configure \
-      		--user=nginx \
-		--group=nginx \
+      		--user=root \
+		--group=root \
         	--prefix=/etc/nginx \
 	        --sbin-path=/usr/sbin/nginx \
         	--conf-path=/etc/nginx/nginx.conf \
@@ -38,15 +41,16 @@ RUN cd ~ \
 	        --with-pcre \
 	        --with-file-aio \
 	        --with-http_realip_module \
-	        --add-module=~/nginx-auth-ldap/ \
-        	--with-ipv6 --with-debug
-	&& make \
-        && make install \
-        && wget https://raw.githubusercontent.com/calvinbui/nginx-init-ubuntu/master/nginx -O /etc/init.d/nginx
-        && chmod +x /etc/init.d/nginx
-        && update-rc.d -f nginx defaults
+	        --add-module=/root/nginx-auth-ldap/ \
+        	--with-ipv6 --with-debug \
+	&&  make \
+        && make install 
+
+RUN wget https://raw.githubusercontent.com/calvinbui/nginx-init-ubuntu/master/nginx -O /etc/init.d/nginx \
+        && chmod +x /etc/init.d/nginx \
+        && update-rc.d -f nginx defaults \
         && service nginx start
 
 EXPOSE 80 443
 
-#CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
+CMD ["/usr/sbin/nginx", "-g", "daemon off;"]
